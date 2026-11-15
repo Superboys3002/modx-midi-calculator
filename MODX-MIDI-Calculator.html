@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MODX+ MIDI Calculator</title>
+<style>
+* { box-sizing:border-box }
+body {
+  margin:0; padding:30px 16px;
+  background:#111827; color:#f9fafb;
+  font-family:Arial,sans-serif;
+}
+main { max-width:720px; margin:auto }
+h1 { font-size:27px; margin-bottom:5px }
+.sub { color:#9ca3af; margin-bottom:25px }
+.panel {
+  background:#1f2937; border:1px solid #374151;
+  border-radius:14px; padding:20px; margin-bottom:16px;
+}
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px }
+label { display:block; color:#cbd5e1; font-size:13px; margin-bottom:8px }
+select {
+  width:100%; padding:13px; border-radius:8px;
+  border:1px solid #4b5563; background:#111827;
+  color:white; font-size:16px;
+}
+h2 { font-size:17px; margin-top:0 }
+.code {
+  background:#0b1220; padding:14px; border-radius:8px;
+  font-family:monospace; font-size:14px;
+  white-space:pre-wrap; overflow-wrap:anywhere;
+  line-height:1.8; color:#a7f3d0;
+}
+button {
+  border:0; border-radius:8px; padding:12px 16px;
+  background:#2563eb; color:white; font-size:14px;
+  cursor:pointer; font-weight:bold;
+}
+button:hover { background:#1d4ed8 }
+.copy { margin-top:12px; width:100% }
+.small { font-size:12px; color:#9ca3af; margin-top:12px }
+.title { color:#93c5fd; font-size:13px; margin-bottom:8px }
+@media(max-width:480px) {
+  .grid { grid-template-columns:1fr }
+  body { padding:18px 12px }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>🎹 MODX+ MIDI Calculator</h1>
+  <div class="sub">Yamaha MODX+ · Live Set · forScore</div>
+
+  <section class="panel">
+    <h2>1. Selecteer je Live Set</h2>
+    <div class="grid">
+      <div>
+        <label for="user">User-bank</label>
+        <select id="user"></select>
+      </div>
+      <div>
+        <label for="page">Pagina</label>
+        <select id="page"></select>
+      </div>
+      <div>
+        <label for="slot">Slot</label>
+        <select id="slot"></select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Afzonderlijke MIDI-commando's</h2>
+    <div class="title">Select User (SysEx)</div>
+    <div class="code" id="sysex"></div>
+    <div class="title" style="margin-top:15px">MSB</div>
+    <div class="code" id="msb"></div>
+    <div class="title" style="margin-top:15px">LSB</div>
+    <div class="code" id="lsb"></div>
+    <div class="title" style="margin-top:15px">Program Change</div>
+    <div class="code" id="pc"></div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Complete code voor forScore</h2>
+    <div class="code" id="full"></div>
+    <button class="copy" onclick="copyCode()">📋 Kopieer volledige MIDI-code</button>
+    <div class="small" id="status">Selecteer User, pagina en slot. Je keuze wordt lokaal onthouden.</div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const hex = n => Number(n).toString(16).toUpperCase().padStart(2,"0");
+
+function fill(id, count, prefix) {
+  const el = $(id);
+  for(let i=1;i<=count;i++) {
+    const opt=document.createElement("option");
+    opt.value=i;
+    opt.textContent=prefix+" "+i;
+    el.appendChild(opt);
+  }
+}
+
+fill("user",8,"User");
+fill("page",16,"Pagina");
+fill("slot",16,"Slot");
+
+function update() {
+  const u=+$("user").value;
+  const p=+$("page").value;
+  const s=+$("slot").value;
+
+  const sysex=`F0 43 10 7F 1C 07 09 00 00 ${hex(u)} F7`;
+  const msb="B0 00 3E";
+  const lsb=`B0 20 ${hex(p-1)}`;
+  const pc=`C0 ${hex(s-1)}`;
+  const full=[sysex,msb,lsb,pc].join("\n");
+
+  $("sysex").textContent=sysex;
+  $("msb").textContent=msb;
+  $("lsb").textContent=lsb;
+  $("pc").textContent=pc;
+  $("full").textContent=full;
+
+  localStorage.setItem("modx-user",u);
+  localStorage.setItem("modx-page",p);
+  localStorage.setItem("modx-slot",s);
+  $("status").textContent=`Geselecteerd: User ${u}, pagina ${p}, slot ${s}.`;
+}
+
+["user","page","slot"].forEach(id=>{
+  $(id).addEventListener("change",update);
+});
+
+$("user").value=localStorage.getItem("modx-user")||4;
+$("page").value=localStorage.getItem("modx-page")||12;
+$("slot").value=localStorage.getItem("modx-slot")||4;
+update();
+
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText($("full").textContent);
+    $("status").textContent="✓ MIDI-code gekopieerd! Klaar voor forScore.";
+  } catch(e) {
+    const t=document.createElement("textarea");
+    t.value=$("full").textContent;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand("copy");
+    t.remove();
+    $("status").textContent="✓ MIDI-code gekopieerd!";
+  }
+}
+</script>
+</body>
+</html>
