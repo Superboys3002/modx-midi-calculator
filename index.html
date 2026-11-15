@@ -51,7 +51,7 @@ button:hover { background:#1d4ed8 }
 <body>
 <main>
   <h1>🎹 MODX+ MIDI Calculator</h1>
-  <div class="sub">Yamaha MODX+ · Live Set · forScore</div>
+  <div class="sub">Yamaha MODX+ · Live Set · ForScore</div>
 
   <section class="panel">
     <h2>1. Selecteer je Live Set</h2>
@@ -84,7 +84,7 @@ button:hover { background:#1d4ed8 }
   </section>
 
   <section class="panel">
-    <h2>3. Complete code voor forScore</h2>
+    <h2>3. Complete code voor ForScore</h2>
     <div class="code" id="full"></div>
     <button class="copy" onclick="copyCode()">📋 Kopieer volledige MIDI-code</button>
     <div class="small" id="status">Selecteer User, pagina en slot. Je keuze wordt lokaal onthouden.</div>
@@ -144,7 +144,7 @@ update();
 async function copyCode() {
   try {
     await navigator.clipboard.writeText($("full").textContent);
-    $("status").textContent="✓ MIDI-code gekopieerd! Klaar voor forScore.";
+    $("status").textContent="✓ MIDI-code gekopieerd! Klaar voor ForScore.";
   } catch(e) {
     const t=document.createElement("textarea");
     t.value=$("full").textContent;
